@@ -1,0 +1,2 @@
+akka-persistence-playground
+===========================
