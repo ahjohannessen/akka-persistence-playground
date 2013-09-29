@@ -1,23 +1,31 @@
 package playground
 
 import akka.actor.{Props, ActorSystem}
-import playground.Tracker._
+import akka.persistence.Persistent
+import playground.MasterOfPuppets._
+import playground.Puppet._
 
 object Main {
 
   def main(args: Array[String]): Unit = {
 
     val system = ActorSystem("playground")
-    val listenerA = system.actorOf(Props[Listener], name = "listener-a")
-    val listenerB = system.actorOf(Props[Listener], name = "listener-b")
-    val tracker = system.actorOf(Props(classOf[Tracker], listenerA), "tracker")
 
-    (1 to 10) foreach {
-      tracker ! Tracker.RegisterTrack(_)
+    val masterOfPuppets = system.actorOf(
+      Props[MasterOfPuppets],
+      name = "master-of-puppets"
+    )
+
+    (1 to 10) foreach { id =>
+      masterOfPuppets ! Persistent(IntroducePuppet(id))
+      masterOfPuppets ! Greeting(id, "Welcome")
     }
 
     Thread.sleep(1000)
-    tracker ! ReportNumberOfTracks
+
+    (5 to 10) foreach { id =>
+       masterOfPuppets ! Persistent(ArchivePuppet(id))
+    }
 
   }
 }
